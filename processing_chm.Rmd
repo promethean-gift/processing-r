@@ -1,0 +1,178 @@
+---
+title: "seven_springs"
+author: "Tyson L Swetnam"
+date: "10/6/2020"
+output: html_document
+---
+
+First, we need to get some data. Here, we're using the USGS 3DEP 2016 flight over North Central New Mexico, which covers our Seven Springs sUAS flight area.
+
+```{bash, echo=FALSE}
+# Download the two USGS 2016 *.laz tiles over Seven Springs NM from CyVerse DataStore
+
+time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450750.laz
+
+time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450765.laz
+```
+
+```{r setup, include=FALSE}
+# Required geospatial libraries 
+
+if (!require("lidR")) {
+   install.packages("lidR")
+   library(lidR)   
+}  
+
+if (!require("future")) {
+   install.packages("future")
+   library(future)   
+}  
+
+if (!require("raster")) {
+   install.packages("raster")
+   library(raster)   
+}  
+
+if (!require("rgdal")) {
+   install.packages("rgdal")
+   library(rgdal)   
+}  
+
+knitr::opts_chunk$set(echo = TRUE)
+
+# note, if upon installing these packages the scripts still break you've got bigger problems than what is in RStudio, likely you need to install the linux dependencies as well. 
+
+# highly recommend you run this app using a Docker container,e.g. Rocker Project's Geospatial image, or one from CyVerse,
+# see: https://hub.docker.com/r/cyversevice/rstudio-geospatial
+```
+
+We are following instructions in the https://jean-romain.github.io/lidRbook 
+
+Some function names have not been updated in the book, but should be up-to-date in the Help Menu for `lidR` in RStudio.
+
+```{r, echo=FALSE}
+# Create a lidR catalog of an entire collection
+
+ctg <- readLAScatalog("~/")
+
+ctg
+```
+
+```{r, echo=FALSE}
+# Check data
+lascheck(ctg)
+```
+
+```{r, echo=FALSE}
+# Plot collection as Leaflet map
+plot(ctg, map=TRUE)
+```
+
+```{r, echo=FALSE}
+dem_tin <- grid_terrain(ctg, 2, tin())
+```
+
+```{r, echo=FALSE}
+# save dem to disk
+writeRaster(dem_tin, '~/dem_tin.tif',options=c('TFW=YES'))
+```
+
+```{r}
+# Create Hillshade
+dem_prod <- terrain(dem_tin, opt = c("slope", "aspect"))
+dem_hillshade <- hillShade(slope = dem_prod$slope, aspect = dem_prod$aspect)
+plot(dem_hillshade, col = gray.colors(50, 0 ,1), legend = FALSE)
+```
+
+```{r, echo=FALSE}
+# save hillshade to disk
+writeRaster(dem_hillshade, '~/dem_hillshade.tif',options=c('TFW=YES'))
+```
+
+
+```{r}
+# Read both laz files from the catalog into the LAS reader
+# filtering layer in attempt to remove extremely high outlier points and below ground level noise (units in meters)
+las = readLAS(ctg)
+
+# Normalize their height in preparation for canopy height model (chm) creation
+nlas <- lasnormalize(las, dem_tin, filter = "-drop_z_below 5 -drop_z_above 45")
+
+# Create a basic canopy height model with the p2r() algorithm
+chm <- grid_canopy(nlas, 0.3333, algorithm = p2r())
+```
+
+```{r, echo=FALSE}
+plot(chm)
+```
+
+```{r, echo=FALSE}
+# Khosravipour et al. pitfree algorithm
+chm_pitfree <- grid_canopy(nlas, res = 0.3333, pitfree(c(0,2,5,10,15), c(0, 1.5)))
+```
+
+```{r, echo=FALSE}
+# save pitfree chm to disk
+writeRaster(chm_pitfree, '~/chm_pitfree.tif', options=c('TFW=YES'), overwrite=TRUE)
+```
+
+```{r, echo=FALSE}
+# Create function that removes shorter local maxima within a variable area window of a larger tree
+f <- function(x){
+  y <- 2.6 * (-(exp(-0.1*(x-2)) - 1)) + 1
+  y[x < 2] <- 0.5
+  y[x > 20] <- 3.2
+  return(y)
+}
+
+heights <- seq(-5,30,0.5)
+
+ws <- f(heights)
+
+# view the variable area model with canopy radii break points
+plot(heights, ws, type = "l",  ylim = c(0,5))
+
+```
+
+```{r, echo=FALSE}
+# segment local maxima of trees using the f(x) function defined above
+ttops <- tree_detection(chm_pitfree, lmf(f))
+```
+
+```{r, echo=FALSE}
+plot(ttops)
+```
+
+```{r, echo=FALSE}
+# Write Tree locations to disk
+writeOGR(ttops, "~/ttops.geojson", layer="ttops", driver="GeoJSON")
+```
+
+# Create Leaflet Map of study area
+
+https://rstudio.github.io/leaflet
+http://leafletjs.com/
+https://www.r-bloggers.com/interactive-mapping-with-leaflet-in-r/
+https://www.color-hex.com/color-palette/19447 
+http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+
+```{r setup}
+library(leaflet)
+library(magrittr)
+```
+
+
+```{r}
+m <- leaflet() %>%
+  addTiles() %>%
+  addRasterImage(dem_hillshade, group = "DEM Hillshade", maxBytes = 1024 * 1024 * 1024, opacity = 1.0) %>%
+  addRasterImage(chm_pitfree, group = "Canopy Height Model", maxBytes = 1024 * 1024 * 1024, opacity = 1.0) %>%
+setView(lng = -106.707, lat = 35.9223, zoom = 15) %>%
+addProviderTiles("Stamen.Toner", group = "Stamen") %>%
+addProviderTiles("Esri.WorldImagery", group = "ESRI Satellite", options = providerTileOptions(opacity = 0.66, transparent = TRUE)) %>%
+addProviderTiles("OpenStreetMap.Mapnik", group = "OpenStreetMap") %>%
+#layers control panel
+addLayersControl(baseGroups = c("Stamen", "ESRI Satellite", "OpenStreetMap"), overlayGroups = c("DEM Hillshade", "Canopy Height Model"), options = layersControlOptions(collapsed = TRUE))
+m
+```
+
