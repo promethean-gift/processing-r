@@ -16,12 +16,11 @@ lascheck(vcnp_2010_ctg)
 
 lidR:::catalog_makecluster(vcnp_2010_ctg, realignment = list(res = 20, start = c(0,0))) # ok
 
-opt_stop_early(vcnp_2010_ctg) <- FALSE
-opt_chunk_buffer(vcnp_2010_ctg) <- 100
-opt_filter(vcnp_2010_ctg) <- "-drop_withheld -drop_class 7 18"
-opt_output_files(vcnp_2010_ctg) <- "/home/rstudio/jemez/dtm/{*}"
-opt_progress(vcnp_2010_ctg) <- FALSE
-
+opt_stop_early(ctg) <- FALSE
+opt_chunk_buffer(ctg) <- 100
+opt_filter(ctg) <- "-drop_withheld -drop_class 7 18"
+opt_output_files(ctg) <- "/home/rstudio/jemez/dtm/{*}"
+opt_progress(ctg) <- FALSE
 
 # Read an individual *.laz file into lidR
 
@@ -49,7 +48,6 @@ plot(dem_hillshade, col = gray.colors(50, 0 ,1), legend = FALSE)
 # Write Hillshade to disk
 
 writeRaster(dem_hillshade,'/home/rstudio/dem_hillshade.tif',options=c('TFW=YES'))
-
 
 # Normalize point cloud height to the DEM
 

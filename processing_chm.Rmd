@@ -10,9 +10,15 @@ First, we need to get some data. Here, we're using the USGS 3DEP 2016 flight ove
 ```{bash, echo=FALSE}
 # Download the two USGS 2016 *.laz tiles over Seven Springs NM from CyVerse DataStore
 
+cd
+mkdir ~/sevensprings
+cd ~/sevensprings
+
 time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450750.laz
 
 time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450765.laz
+
+time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450735.laz
 ```
 
 ```{r setup, include=FALSE}
@@ -53,7 +59,7 @@ Some function names have not been updated in the book, but should be up-to-date 
 ```{r, echo=FALSE}
 # Create a lidR catalog of an entire collection
 
-ctg <- readLAScatalog("~/")
+ctg <- readLAScatalog("~/sevensprings/")
 
 ctg
 ```
@@ -69,7 +75,7 @@ plot(ctg, map=TRUE)
 ```
 
 ```{r, echo=FALSE}
-dem_tin <- grid_terrain(ctg, 2, tin())
+dem_tin <- grid_terrain(ctg, 1, tin())
 ```
 
 ```{r, echo=FALSE}
@@ -109,6 +115,7 @@ plot(chm)
 ```{r, echo=FALSE}
 # Khosravipour et al. pitfree algorithm
 chm_pitfree <- grid_canopy(nlas, res = 0.3333, pitfree(c(0,2,5,10,15), c(0, 1.5)))
+plot(chm_pitfree)
 ```
 
 ```{r, echo=FALSE}
