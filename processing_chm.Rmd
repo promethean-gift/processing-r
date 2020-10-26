@@ -59,7 +59,7 @@ Some function names have not been updated in the book, but should be up-to-date 
 ```{r, echo=FALSE}
 # Create a lidR catalog of an entire collection
 
-ctg <- readLAScatalog("~/sevensprings/")
+ctg <- readLAScatalog("~/sevensprings/laz/")
 
 ctg
 ```
@@ -80,7 +80,7 @@ dem_tin <- grid_terrain(ctg, 1, tin())
 
 ```{r, echo=FALSE}
 # save dem to disk
-writeRaster(dem_tin, '~/dem_tin.tif',options=c('TFW=YES'))
+writeRaster(dem_tin, '~/sevensprings/dem_tin.tif',options=c('TFW=YES'))
 ```
 
 ```{r}
@@ -92,7 +92,7 @@ plot(dem_hillshade, col = gray.colors(50, 0 ,1), legend = FALSE)
 
 ```{r, echo=FALSE}
 # save hillshade to disk
-writeRaster(dem_hillshade, '~/dem_hillshade.tif',options=c('TFW=YES'))
+writeRaster(dem_hillshade, '~/sevensprings/dem_hillshade.tif',options=c('TFW=YES'))
 ```
 
 
@@ -120,7 +120,7 @@ plot(chm_pitfree)
 
 ```{r, echo=FALSE}
 # save pitfree chm to disk
-writeRaster(chm_pitfree, '~/chm_pitfree.tif', options=c('TFW=YES'), overwrite=TRUE)
+writeRaster(chm_pitfree, '~/sevensprings/chm_pitfree.tif', options=c('TFW=YES'), overwrite=TRUE)
 ```
 
 ```{r, echo=FALSE}
@@ -152,7 +152,7 @@ plot(ttops)
 
 ```{r, echo=FALSE}
 # Write Tree locations to disk
-writeOGR(ttops, "~/ttops.geojson", layer="ttops", driver="GeoJSON")
+writeOGR(ttops, "~/sevensprings/ttops.geojson", layer="ttops", driver="GeoJSON")
 ```
 
 # Create Leaflet Map of study area
