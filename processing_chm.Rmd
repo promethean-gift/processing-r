@@ -14,11 +14,11 @@ cd
 mkdir ~/sevensprings
 cd ~/sevensprings
 
-time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450750.laz
+time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/laz/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450750.laz
 
-time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450765.laz
+time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/laz/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450765.laz
 
-time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450735.laz
+time wget -r -nH --cut-dirs=8 --no-parent -l8 --reject="index.html*" https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/laz/USGS_LPC_NM_NorthCentral_B1_2016/laz/USGS_LPC_NM_NorthCentral_B1_2016_13SCV450735.laz
 ```
 
 ```{r setup, include=FALSE}
