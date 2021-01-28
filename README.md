@@ -1,10 +1,12 @@
 # processing-r
 
-r scripting for [lidR](https://github.com/Jean-Romain/lidR) (re)processing USGS and USFS lidar datasets over the Jemez for their forest canopy and tree segmentation metrics.
+r scripting for [lidR](https://github.com/Jean-Romain/lidR) (re)processing USGS and USFS lidar, and sUAS Structure from Motoin (SfM) datasets over the Jemez Mountain study sites for their forest canopy and tree segmentation metrics.
 
-# container
+# containers
 
-If you have a CyVerse account, you can launch a container here:
+Our analyses were run using Docker containers on NSF CyVerse and University of Arizona cyberinfrastructure.
+
+If you have a CyVerse account, you can launch the container used in our analyses here:
 
 <a href="https://de.cyverse.org/de/?type=quick-launch&quick-launch-id=e7383172-dafd-42a2-b539-a67a9b65425e&app-id=6943b4f2-b663-11ea-92c5-008cfa5ae621" target="_blank"><img src="https://de.cyverse.org/Powered-By-CyVerse-blue.svg"></a>  [![TAG](https://img.shields.io/docker/v/cyversevice/rstudio-geospatial/4.0.0)](https://microbadger.com/images/cyversevice/rstudio-geospatial:4.0.0) 
 
@@ -16,7 +18,7 @@ docker run -it --rm -v /$HOME:/app --workdir /app -p 8787:80 -e REDIRECT_URL=htt
 
 # steps
 
-Clone this repository:
+Clone this repository in the RStudio console:
 
 ```
 git clone https://github.com/promethean-gift/processing-r
@@ -26,4 +28,4 @@ Open the .RProj file in RStudio
 
 Open the .r and .Rmd files
 
-Follow the steps or modify them to select new data sets.
+Follow the steps or modify the code in the `.r` or `.Rmd` files to change and to select new data sets.
