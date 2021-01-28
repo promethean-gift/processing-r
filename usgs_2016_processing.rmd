@@ -1,0 +1,188 @@
+---
+title: "usgs_northern_nm_2018"
+author: "Tyson L Swetnam"
+date: "1/24/2021"
+output: html_document
+---
+
+Here, we're using the USGS 3DEP 2018 flight over North Central New Mexico, which covers our Seven Springs sUAS flight area.
+
+All of the project data sets are hosted on CyVerse at: [https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/](https://data.cyverse.org/dav-anon/iplant/home/tswetnam/jemez/lidar/)
+
+lidR works best with *.las and *.laz file types.
+
+The CyVerse Data Store can use either [iCommands](https://learning.cyverse.org/projects/data_store_guide/en/latest/step2.html) or conventional `wget` or `curl` commands via [WebDav](https://data.cyverse.org)
+
+
+
+```{r setup, include=FALSE}
+# Check for and install any required libraries 
+
+if (!require("lidR")) {
+   install.packages("lidR")
+   library(lidR)   
+}  
+
+if (!require("future")) {
+   install.packages("future")
+   library(future)   
+}  
+
+if (!require("raster")) {
+   install.packages("raster")
+   library(raster)   
+}  
+
+if (!require("rgdal")) {
+   install.packages("rgdal")
+   library(rgdal)   
+}  
+
+knitr::opts_chunk$set(echo = TRUE)
+
+# note, if upon installing these packages the scripts still break you've got bigger problems than what is in RStudio, likely you need to install the linux dependencies as well. 
+
+# highly recommend you run this app using a Docker container,e.g. Rocker Project's Geospatial image, or one from CyVerse,
+# see: https://hub.docker.com/r/cyversevice/rstudio-geospatial
+```
+
+We are following instructions in the https://jean-romain.github.io/lidRbook 
+
+Some function names have not been updated in the book, but should be up-to-date in the Help Menu for `lidR` in RStudio.
+
+```{r, echo=FALSE}
+# Create a lidR catalog of an entire collection
+
+ctg <- readLAScatalog("~/jemez/lidar/laz/USGS_LPC_NM_NorthCentral/")
+
+ctg
+```
+
+```{r, echo=FALSE}
+# Check data
+lascheck(ctg)
+
+# create index if not yet created
+lidR:::catalog_laxindex(ctg)
+```
+
+```{r, echo=FALSE}
+# Plot collection as Leaflet map
+plot(ctg, map=TRUE)
+```
+
+```{r, echo=FALSE}
+dem_tin <- grid_terrain(ctg, 1, tin())
+```
+
+```{r, echo=FALSE}
+# save dem to disk
+writeRaster(dem_tin, '~/sevensprings/dem_tin.tif',options=c('TFW=YES'))
+```
+
+```{r}
+# Create Hillshade
+dem_prod <- terrain(dem_tin, opt = c("slope", "aspect"))
+dem_hillshade <- hillShade(slope = dem_prod$slope, aspect = dem_prod$aspect)
+plot(dem_hillshade, col = gray.colors(50, 0 ,1), legend = FALSE)
+```
+
+```{r, echo=FALSE}
+# save hillshade to disk
+writeRaster(dem_hillshade, '~/sevensprings/dem_hillshade.tif',options=c('TFW=YES'))
+```
+
+
+```{r}
+# set options for catalog
+opt_stop_early(ctg) <- FALSE
+opt_chunk_buffer(ctg) <- 100
+opt_filter(ctg) <- "-drop_withheld -drop_class 7 18"
+opt_output_files(ctg) <- "/home/rstudio/norm_laz/{*}"
+opt_progress(ctg) <- TRUE
+
+# Normalize their height in preparation for canopy height model (chm) creation
+nlas <- normalize_height(ctg, dem_tin, filter = "-drop_z_below 5 -drop_z_above 45")
+
+# Khosravipour et al. pitfree algorithm
+chm_pitfree <- grid_canopy(nlas, res = 0.25, pitfree(c(0,2,5,10,15), c(0, 1.5)))
+plot(chm_pitfree)
+```
+
+```{r, echo=FALSE}
+# save pitfree chm to disk
+writeRaster(chm_pitfree, '~/sevensprings/chm_pitfree.tif', options=c('TFW=YES'), overwrite=TRUE)
+```
+
+```{r, echo=FALSE}
+# Create function that removes shorter local maxima within a variable area window of a larger tree
+f <- function(x){
+  y <- 2.6 * (-(exp(-0.1*(x-2)) - 1)) + 1
+  y[x < 2] <- 0.5
+  y[x > 20] <- 3.2
+  return(y)
+}
+
+heights <- seq(-5,30,0.5)
+
+ws <- f(heights)
+
+# view the variable area model with canopy radii break points
+plot(heights, ws, type = "l",  ylim = c(0,5))
+
+```
+
+```{r, echo=FALSE}
+# segment local maxima of trees using the f(x) function defined above
+ttops <- tree_detection(chm_pitfree, lmf(f))
+```
+
+```{r, echo=FALSE}
+plot(ttops)
+```
+
+```{r, echo=FALSE}
+# Write Tree locations to disk
+writeOGR(ttops, "ttops.geojson", layer="ttops", driver="GeoJSON")
+```
+```{r echo=FALSE}
+#Identified tree tops are the starting points for a region grow routine that adds new pixels to the tree based on some user defined thresholds
+#th_seed = pixel is added to tree if its height is greater than user defined proportion multiplied by local max height
+#For example, if a tree top is 10 m high, and the parameter is set to 0.25, then the pixel needs to be at least 2.5 m high to be added.
+#th_cr = similar to th_seed, except instead of using local max height, it uses mean height of 
+treeseg_dalponte= segment_trees(nlas, dalponte2016(chm = chm_pitfree, treetops = ttops, th_tree = 1.5, th_seed = 0.20, th_cr = 0.20, max_cr = 35, ID = "treeID"), uniqueness = "bitmerge")
+
+#Calculate a convex hull and draw a polygon for each tree
+metric = tree_metrics(treeseg_dalponte, .stdtreemetrics)
+hulls4  = tree_hulls(treeseg_dalponte)
+hulls4@data = dplyr::left_join(hulls4@data, metric@data)
+```
+
+# Create Leaflet Map of study area
+
+https://rstudio.github.io/leaflet
+http://leafletjs.com/
+https://www.r-bloggers.com/interactive-mapping-with-leaflet-in-r/
+https://www.color-hex.com/color-palette/19447 
+http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+
+```{r setup}
+library(leaflet)
+library(magrittr)
+```
+
+
+```{r}
+m <- leaflet() %>%
+  addTiles() %>%
+  addRasterImage(dem_hillshade, group = "DEM Hillshade", maxBytes = 1024 * 1024 * 1024, opacity = 1.0) %>%
+  addRasterImage(chm_pitfree, group = "Canopy Height Model", maxBytes = 1024 * 1024 * 1024, opacity = 1.0) %>%
+setView(lng = -106.707, lat = 35.9223, zoom = 15) %>%
+addProviderTiles("Stamen.Toner", group = "Stamen") %>%
+addProviderTiles("Esri.WorldImagery", group = "ESRI Satellite", options = providerTileOptions(opacity = 0.66, transparent = TRUE)) %>%
+addProviderTiles("OpenStreetMap.Mapnik", group = "OpenStreetMap") %>%
+#layers control panel
+addLayersControl(baseGroups = c("Stamen", "ESRI Satellite", "OpenStreetMap"), overlayGroups = c("DEM Hillshade", "Canopy Height Model"), options = layersControlOptions(collapsed = TRUE))
+m
+```
+

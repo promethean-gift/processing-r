@@ -6,29 +6,28 @@ library(rgdal)
 
 # Create a lidR catalog of an entire collection
 
-ctg <- readLAScatalog("/home/rstudio/jemez/lidar/laz/NM_South_Central_B9_2018/")
+ctg <- readLAScatalog("/home/rstudio/jemez/lidar/laz/NM_SouthCentral_B9_2018/laz/")
 
 ctg
 
 plot(ctg, map=TRUE)
 
-lascheck(vcnp_2010_ctg)
+lascheck(ctg)
 
-lidR:::catalog_makecluster(vcnp_2010_ctg, realignment = list(res = 20, start = c(0,0))) # ok
+lidR:::catalog_makecluster(ctg, realignment = list(res = 20, start = c(0,0))) # ok
 
 opt_stop_early(ctg) <- FALSE
 opt_chunk_buffer(ctg) <- 100
 opt_filter(ctg) <- "-drop_withheld -drop_class 7 18"
-opt_output_files(ctg) <- "/home/rstudio/jemez/dtm/{*}"
-opt_progress(ctg) <- FALSE
+opt_output_files(ctg) <- "/home/rstudio/dtm/{*}"
+opt_progress(ctg) <- TRUE
 
 # Read an individual *.laz file into lidR
 
 las <- readLAS("/home/rstudio/jemez/lidar/laz/NM_South_Central_B9_2018/NM_SouthCentral_B9_2018__17.laz")
 
 # Create DEM
-
-dem_tin <- grid_terrain(las, res = 1, algorithm = tin())
+dem_tin <- grid_terrain(ctg, res = 1, algorithm = tin())
 
 # Write DEM to disk
 
@@ -51,7 +50,8 @@ writeRaster(dem_hillshade,'/home/rstudio/dem_hillshade.tif',options=c('TFW=YES')
 
 # Normalize point cloud height to the DEM
 
-nlas <- lasnormalize(las, dtm_tin)
+dem <- raster('/home/rstudio/dem_tin.tif')
+nlas <- normalize_height(ctg, dem)
 
 plot(nlas)
 
