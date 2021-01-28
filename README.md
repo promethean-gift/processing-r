@@ -6,14 +6,12 @@ r scripting for [lidR](https://github.com/Jean-Romain/lidR) (re)processing USGS 
 
 Our analyses were run using Docker containers on NSF CyVerse and University of Arizona cyberinfrastructure.
 
-If you have a CyVerse account, you can launch the container used in our analyses here:
+After you create a [CyVerse Account](https://user.cyverse.org/) (free), you can launch the container used in our analyses here: <a href="https://de.cyverse.org/de/?type=quick-launch&quick-launch-id=12f25023-b6b1-4f23-bbcc-49f0295da8c4&app-id=07e2b2e6-becd-11e9-b524-008cfa5ae621" target="_blank"><img src="https://de.cyverse.org/Powered-By-CyVerse-blue.svg"></a> 
 
-<a href="https://de.cyverse.org/de/?type=quick-launch&quick-launch-id=12f25023-b6b1-4f23-bbcc-49f0295da8c4&app-id=07e2b2e6-becd-11e9-b524-008cfa5ae621" target="_blank"><img src="https://de.cyverse.org/Powered-By-CyVerse-blue.svg"></a> </a>  [![TAG](https://img.shields.io/docker/v/cyversevice/rstudio-geospatial/4.0.0)](https://microbadger.com/images/cyversevice/rstudio-geospatial:4.0.0) 
-
-Alternately, you can run the container locally with [Docker](https://docker.com):
+Alternately, you can install [Docker](https://docker.com) and run the analysis on your local computer:
 
 ```
-docker run -it --rm -v /$HOME:/app --workdir /app -p 8787:80 -e REDIRECT_URL=http://localhost:8787 cyversevice/rstudio-geospatial:4.0.0
+docker run -it --rm -v /$HOME:/workspace --workdir /workspace -p 8787:80 -e REDIRECT_URL=http://localhost:8787 cyversevice/rstudio-geospatial:4.0.0
 ```
 
 # steps
