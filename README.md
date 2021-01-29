@@ -5,7 +5,7 @@
 r scripting for [lidR](https://github.com/Jean-Romain/lidR) (re)processing USGS and USFS lidar, and sUAS Structure from Motoin (SfM) datasets over the Jemez Mountain study sites for their forest canopy and tree segmentation metrics.
 
 # containers
-[![DockerHub](https://img.shields.io/badge/DockerHub-brightgreen.svg?style=popout&logo=Docker)](https://hub.docker.com/repository/docker/cyversevice/jupyterlab-geospatial)
+[![DockerHub](https://img.shields.io/badge/DockerHub-brightgreen.svg?style=popout&logo=Docker)](https://hub.docker.com/repository/docker/cyversevice/rstudio-geospatial)
 
 Our analyses were run using Docker containers on NSF CyVerse and University of Arizona cyberinfrastructure.
 
