@@ -1,8 +1,11 @@
+[![Project Supported by CyVerse](https://img.shields.io/badge/Supported%20by-CyVerse-blue.svg)](https://learning.cyverse.org/projects/vice/en/latest/) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active) [![license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
+
 # processing-r
 
 r scripting for [lidR](https://github.com/Jean-Romain/lidR) (re)processing USGS and USFS lidar, and sUAS Structure from Motoin (SfM) datasets over the Jemez Mountain study sites for their forest canopy and tree segmentation metrics.
 
 # containers
+[![DockerHub](https://img.shields.io/badge/DockerHub-brightgreen.svg?style=popout&logo=Docker)](https://hub.docker.com/repository/docker/cyversevice/jupyterlab-geospatial)
 
 Our analyses were run using Docker containers on NSF CyVerse and University of Arizona cyberinfrastructure.
 
